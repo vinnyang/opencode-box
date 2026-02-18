@@ -5,9 +5,9 @@ Docker container for [OpenCode](https://opencode.ai) - the open source AI coding
 ## What's Included
 
 - **OpenCode AI** - Latest version from npm (`opencode-ai`)
-- **Node.js 24.13.1 LTS** (Krypton)
+- **Node.js 25.x (Current)**
 - **npm** - Node package manager (global)
-- **Alpine Linux 3.22** - Minimal base image (~180MB)
+- **Alpine Linux 3.23** - Minimal base image (~180MB)
 
 ## Quick Start
 
@@ -19,7 +19,7 @@ docker run -d \
   -e OPENCODE_CONFIG=/config/opencode.json \
   -v /path/to/config:/config \
   -v /path/to/projects:/projects \
-  yourname/opencode:latest
+  vinnyahh/opencode-box:latest
 ```
 
 Access at http://localhost:4096
@@ -49,8 +49,12 @@ docker-compose up -d
 ## Building
 
 ```bash
-docker build -t yourname/opencode:latest .
+docker build -t vinnyahh/opencode-box:latest .
 ```
+
+## Docker Hub
+
+[vinnyahh/opencode-box](https://hub.docker.com/r/vinnyahh/opencode-box)
 
 ## License
 
