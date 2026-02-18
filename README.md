@@ -14,38 +14,17 @@ Docker container for [OpenCode](https://opencode.ai) - the open source AI coding
 
 This container supports running MCP (Model Context Protocol) servers for extending OpenCode's capabilities:
 
-| MCP Server Type | Runtime | Example Command |
-|-----------------|---------|-----------------|
-| Node.js packages | `npx` | `npx -y @modelcontextprotocol/server-github` |
-| Python packages | `uvx` | `uvx mcp-server-sqlite` |
-| Remote servers | HTTP | URL in config |
+| MCP Server Type  | Runtime | Example Command                              |
+| ---------------- | ------- | -------------------------------------------- |
+| Node.js packages | `npx`   | `npx -y @modelcontextprotocol/server-github` |
+| Python packages  | `uvx`   | `uvx mcp-server-sqlite`                      |
+| Remote servers   | HTTP    | URL in config                                |
 
-### Example MCP Config
+### Example MCP Config | [opencode.jsonc](https://github.com/vinnyang/opencode-box/blob/master/config/opencode.jsonc)
 
-Mount your `opencode.json` with MCP servers:
+<img width="514" height="322" alt="image" src="https://github.com/user-attachments/assets/e95473c0-5bca-4b7b-89e3-0adc1a4ce7c5" />
 
-```json
-{
-  "$schema": "https://opencode.ai/config.json",
-  "mcp": {
-    "github": {
-      "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-github"],
-      "environment": {
-        "GITHUB_TOKEN": "{env:GITHUB_TOKEN}"
-      }
-    },
-    "sqlite": {
-      "type": "local",
-      "command": ["uvx", "mcp-server-sqlite", "--db-path", "/data/db.sqlite"]
-    },
-    "context7": {
-      "type": "remote",
-      "url": "https://mcp.context7.com/mcp"
-    }
-  }
-}
-```
+Mount your `opencode.json` to override the placeholder JSON.
 
 ## Quick Start
 
@@ -77,10 +56,10 @@ docker run -d \
 
 ### Persistent vs Ephemeral Mode
 
-| Mode | Command | Use Case |
-|------|---------|----------|
-| **Persistent** | `-v ./data:/data` | Production, keep session history |
-| **Ephemeral** | (no data mount) | Testing, CI, fresh start each time |
+| Mode           | Command           | Use Case                           |
+| -------------- | ----------------- | ---------------------------------- |
+| **Persistent** | `-v ./data:/data` | Production, keep session history   |
+| **Ephemeral**  | (no data mount)   | Testing, CI, fresh start each time |
 
 ## Environment Variables
 
@@ -99,11 +78,11 @@ docker-compose up -d
 
 ## Volumes
 
-| Path | Description | Persistent? |
-|------|-------------|-------------|
-| `/config` | OpenCode config, agents, commands | Mount for custom config |
-| `/data` | Sessions, auth, logs | Mount for persistence |
-| `/projects` | Your project files | Mount your code |
+| Path        | Description                       | Persistent?             |
+| ----------- | --------------------------------- | ----------------------- |
+| `/config`   | OpenCode config, agents, commands | Mount for custom config |
+| `/data`     | Sessions, auth, logs              | Mount for persistence   |
+| `/projects` | Your project files                | Mount your code         |
 
 ## Directory Structure
 
