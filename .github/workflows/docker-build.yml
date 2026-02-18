@@ -2,8 +2,11 @@ name: Build and Push Docker Image
 
 on:
   schedule:
-    - cron: '0 8 * * 0'
+    - cron: '0 8 * * *'
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   check-and-build:
@@ -12,34 +15,53 @@ jobs:
       base_changed: ${{ steps.check.outputs.changed }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
 
-      - name: Check base image digest
+      - name: Check for updates
         id: check
         run: |
+          CHANGED="false"
+          COMMIT_MSG=""
+          
+          # Check base image digest
           CURRENT_DIGEST=$(curl -s "https://registry.hub.docker.com/v2/repositories/library/node/tags/alpine" | jq -r '.digest')
           STORED_DIGEST=$(cat .base-image-digest 2>/dev/null || echo "")
-
-          echo "current_digest=$CURRENT_DIGEST" >> $GITHUB_OUTPUT
-          echo "stored_digest=$STORED_DIGEST" >> $GITHUB_OUTPUT
-
+          
           if [ "$CURRENT_DIGEST" != "$STORED_DIGEST" ]; then
             echo "Base image changed: $STORED_DIGEST -> $CURRENT_DIGEST"
-            echo "changed=true" >> $GITHUB_OUTPUT
-          else
-            echo "Base image unchanged"
-            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "$CURRENT_DIGEST" > .base-image-digest
+            CHANGED="true"
+            COMMIT_MSG="Update base image digest"
           fi
+          
+          # Check opencode-ai version
+          CURRENT_OPENCODE=$(curl -s https://registry.npmjs.org/opencode-ai/latest | jq -r '.version')
+          STORED_OPENCODE=$(cat .opencode-version 2>/dev/null || echo "")
+          
+          if [ "$CURRENT_OPENCODE" != "$STORED_OPENCODE" ]; then
+            echo "opencode-ai changed: $STORED_OPENCODE -> $CURRENT_OPENCODE"
+            echo "$CURRENT_OPENCODE" > .opencode-version
+            CHANGED="true"
+            if [ -n "$COMMIT_MSG" ]; then
+              COMMIT_MSG="$COMMIT_MSG and opencode-ai to v$CURRENT_OPENCODE"
+            else
+              COMMIT_MSG="Update opencode-ai to v$CURRENT_OPENCODE"
+            fi
+          fi
+          
+          echo "changed=$CHANGED" >> $GITHUB_OUTPUT
+          echo "commit_msg=$COMMIT_MSG" >> $GITHUB_OUTPUT
 
-      - name: Update digest file
+      - name: Update version files
         if: steps.check.outputs.changed == 'true'
         run: |
-          echo "${{ steps.check.outputs.current_digest }}" > .base-image-digest
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .base-image-digest
-          git commit -m "Update base image digest to ${{ steps.check.outputs.current_digest }}"
-          git push
+          git add .base-image-digest .opencode-version
+          git commit -m "${{ steps.check.outputs.commit_msg }}"
+          git push https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/${{ github.repository }}.git HEAD:master
 
   build-and-push:
     needs: check-and-build
@@ -47,7 +69,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -63,9 +88,10 @@ jobs:
         run: echo "tag=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
 
       - name: Build and Push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: |
             vinnyahh/opencode-box:${{ steps.date.outputs.tag }}
