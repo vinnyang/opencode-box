@@ -1,0 +1,31 @@
+name: Build and Push Docker Image
+on:
+  schedule:
+    - cron: '0 8 * * 0'
+  workflow_dispatch: # Manual trigger
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Generate date tag
+        id: date
+        run: echo "tag=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+      - name: Build and Push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            vinnyahh/opencode-box:${{ steps.date.outputs.tag }}
+            vinnyahh/opencode-box:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
