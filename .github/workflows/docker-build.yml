@@ -4,6 +4,12 @@ on:
   schedule:
     - cron: '0 8 * * *'
   workflow_dispatch:
+    inputs:
+      force:
+        description: 'Force build even if no changes detected'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -13,6 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       base_changed: ${{ steps.check.outputs.changed }}
+      force_build: ${{ github.event.inputs.force == 'true' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -65,7 +72,7 @@ jobs:
 
   build-and-push:
     needs: check-and-build
-    if: needs.check-and-build.outputs.base_changed == 'true'
+    if: needs.check-and-build.outputs.base_changed == 'true' || needs.check-and-build.outputs.force_build == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
