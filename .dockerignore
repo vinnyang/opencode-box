@@ -1,0 +1,7 @@
+config/
+projects/
+.git/
+.gitignore
+*.md
+.env
+.env.*

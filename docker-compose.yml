@@ -1,0 +1,13 @@
+services:
+  opencode:
+    build: .
+    ports:
+      - "4096:4096"
+    environment:
+      - OPENCODE_PORT=4096
+      - OPENCODE_HOSTNAME=0.0.0.0
+      - OPENCODE_CONFIG=/config/opencode.json
+    volumes:
+      - ./config:/config
+      - ./projects:/projects
+    working_dir: /projects
