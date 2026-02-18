@@ -1,4 +1,4 @@
-config/
+data/
 projects/
 .env
 .env.*

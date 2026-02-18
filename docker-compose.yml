@@ -9,5 +9,6 @@ services:
       - OPENCODE_CONFIG=/config/opencode.json
     volumes:
       - ./config:/config
+      - ./data:/data
       - ./projects:/projects
     working_dir: /projects

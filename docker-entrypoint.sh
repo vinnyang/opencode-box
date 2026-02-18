@@ -1,6 +1,10 @@
 #!/bin/sh
 set -e
 
+mkdir -p ~/.local/share ~/.config
+ln -sf /data ~/.local/share/opencode
+ln -sf /config ~/.config/opencode
+
 ARGS=""
 
 if [ -n "$OPENCODE_PORT" ]; then

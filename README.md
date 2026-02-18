@@ -1,13 +1,51 @@
-# OpenCode Container w. Node
+# OpenCode Container w. Node & Python
 
 Docker container for [OpenCode](https://opencode.ai) - the open source AI coding agent.
 
 ## What's Included
 
 - **OpenCode AI** - Latest version from npm (`opencode-ai`)
-- **Node.js 25.x (Current)**
-- **npm** - Node package manager (global)
-- **Alpine Linux 3.23** - Minimal base image (~180MB)
+- **Node.js 25.x (Current)** - For npm-based MCP servers (`npx`)
+- **Python 3** - For Python-based MCP servers (`uvx`)
+- **uv** - Fast Python package manager
+- **Alpine Linux 3.23** - Minimal base image
+
+## MCP Server Support
+
+This container supports running MCP (Model Context Protocol) servers for extending OpenCode's capabilities:
+
+| MCP Server Type | Runtime | Example Command |
+|-----------------|---------|-----------------|
+| Node.js packages | `npx` | `npx -y @modelcontextprotocol/server-github` |
+| Python packages | `uvx` | `uvx mcp-server-sqlite` |
+| Remote servers | HTTP | URL in config |
+
+### Example MCP Config
+
+Mount your `opencode.json` with MCP servers:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "github": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-github"],
+      "environment": {
+        "GITHUB_TOKEN": "{env:GITHUB_TOKEN}"
+      }
+    },
+    "sqlite": {
+      "type": "local",
+      "command": ["uvx", "mcp-server-sqlite", "--db-path", "/data/db.sqlite"]
+    },
+    "context7": {
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp"
+    }
+  }
+}
+```
 
 ## Quick Start
 
@@ -18,11 +56,31 @@ docker run -d \
   -e OPENCODE_HOSTNAME=0.0.0.0 \
   -e OPENCODE_CONFIG=/config/opencode.json \
   -v /path/to/config:/config \
+  -v /path/to/data:/data \
   -v /path/to/projects:/projects \
   vinnyahh/opencode-box:latest
 ```
 
 Access at http://localhost:4096
+
+## Persistence
+
+By default, session data is **ephemeral** (lost when container is destroyed).
+
+For **persistent data** (sessions, auth, logs), mount the `/data` volume:
+
+```bash
+docker run -d \
+  -v ./data:/data \
+  vinnyahh/opencode-box:latest
+```
+
+### Persistent vs Ephemeral Mode
+
+| Mode | Command | Use Case |
+|------|---------|----------|
+| **Persistent** | `-v ./data:/data` | Production, keep session history |
+| **Ephemeral** | (no data mount) | Testing, CI, fresh start each time |
 
 ## Environment Variables
 
@@ -41,10 +99,37 @@ docker-compose up -d
 
 ## Volumes
 
-| Path        | Description                  |
-| ----------- | ---------------------------- |
-| `/config`   | OpenCode configuration files |
-| `/projects` | Your project files           |
+| Path | Description | Persistent? |
+|------|-------------|-------------|
+| `/config` | OpenCode config, agents, commands | Mount for custom config |
+| `/data` | Sessions, auth, logs | Mount for persistence |
+| `/projects` | Your project files | Mount your code |
+
+## Directory Structure
+
+When you mount volumes, OpenCode expects this structure:
+
+```
+config/
+├── opencode.json      # Main config file
+├── agents/            # Custom agents
+├── commands/          # Custom commands
+├── plugins/           # Custom plugins
+├── themes/            # Custom themes
+├── tools/             # Custom tools
+├── skills/            # Custom skills
+└── modes/             # Custom modes
+
+data/
+├── auth.json          # API credentials (auto-generated)
+├── mcp-auth.json      # MCP OAuth tokens (auto-generated)
+├── sessions/          # Conversation history
+├── snapshots/         # Session checkpoints
+└── log/               # Log files
+
+projects/
+└── (your code)        # Your project files
+```
 
 ## Building
 

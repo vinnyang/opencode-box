@@ -1,7 +1,9 @@
-config/
-projects/
 .git/
 .gitignore
-*.md
+data/
+projects/
 .env
 .env.*
+*.md
+!README.md
+.github/
