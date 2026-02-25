@@ -4,11 +4,11 @@ Docker container for [OpenCode](https://opencode.ai) - the open source AI coding
 
 ## What's Included
 
-- **OpenCode AI** - Latest version from npm (`opencode-ai`)
-- **Node.js 25.x (Current)** - For npm-based MCP servers (`npx`)
+- **OpenCode AI** - Latest version from official installer (opencode.ai/install)
+- **Node.js** - Latest from node:alpine base image, for npm-based MCP servers (`npx`)
 - **Python 3** - For Python-based MCP servers (`uvx`)
 - **uv** - Fast Python package manager
-- **Alpine Linux 3.23** - Minimal base image
+- **Alpine Linux** - Minimal base image
 
 ## MCP Server Support
 
