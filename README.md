@@ -25,6 +25,17 @@ docker run -d \
   -p 4096:4096 \
   -e OPENCODE_PORT=4096 \
   -e OPENCODE_HOSTNAME=0.0.0.0 \
+  -v ./config:/config \
+  -v ./data:/data \
+  -v ./projects:/projects \
+  vinnyahh/opencode-box:latest
+```
+
+```bash
+docker run -d \
+  -p 4096:4096 \
+  -e OPENCODE_PORT=4096 \
+  -e OPENCODE_HOSTNAME=0.0.0.0 \
   -e OPENCODE_CONFIG=/config/opencode.json \
   -v ./config:/config \
   -v ./data:/data \
