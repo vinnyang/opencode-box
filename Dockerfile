@@ -22,4 +22,4 @@ RUN if [ -f /config/opencode.jsonc ]; then \
 EXPOSE 4096
 
 ENTRYPOINT ["docker-entrypoint.sh"]
-CMD ["web"]
+CMD ["serve"]
