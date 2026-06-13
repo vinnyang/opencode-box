@@ -4,11 +4,6 @@ set -e
 # Make sure opencode is in PATH
 export PATH="$HOME/.opencode/bin:$PATH"
 
-# Pass server password as environment variable if set
-if [ -n "$OPENCODE_SERVER_PASSWORD" ]; then
-  export OPENCODE_SERVER_PASSWORD
-fi
-
 mkdir -p ~/.local/share ~/.config
 
 # Link data directory for persistence

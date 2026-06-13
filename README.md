@@ -15,8 +15,10 @@ Docker container for [OpenCode](https://opencode.ai) - the open source AI coding
 **Minimal (ephemeral - data lost on restart):**
 
 ```bash
-docker run -d -p 4096:4096 vinnyahh/opencode-box:latest
+docker run -d -p 4096:4096 -e OPENCODE_HOSTNAME=0.0.0.0 vinnyahh/opencode-box:latest
 ```
+
+> ⚠️ **Security:** `OPENCODE_HOSTNAME=0.0.0.0` is required for the published port to be reachable, but it exposes an **unauthenticated** agent with full file & shell access. Run it only on a trusted local network, or set `OPENCODE_SERVER_PASSWORD`.
 
 **With persistence:**
 
@@ -85,7 +87,7 @@ This container supports running MCP (Model Context Protocol) servers:
 | Python packages  | `uvx`   | `uvx mcp-server-sqlite`                      |
 | Remote servers   | HTTP    | URL in config                                |
 
-See [opencode.jsonc](https://github.com/vinnyahh/opencode-box/blob/master/config/opencode.jsonc) for a full example.
+See [opencode.json](https://github.com/vinnyahh/opencode-box/blob/master/config/opencode.json) for a full example.
 
 ## Docker Compose
 

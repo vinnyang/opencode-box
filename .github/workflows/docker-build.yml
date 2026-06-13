@@ -9,6 +9,9 @@ on:
         required: false
         default: false
         type: boolean
+concurrency:
+  group: docker-build
+  cancel-in-progress: false
 permissions:
   contents: write
 jobs:

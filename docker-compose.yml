@@ -5,10 +5,14 @@ services:
       - "4096:4096"
     environment:
       - OPENCODE_PORT=4096
+      # 0.0.0.0 exposes the agent on your LAN. It is UNAUTHENTICATED with full
+      # file/shell access unless OPENCODE_SERVER_PASSWORD is set. Trusted networks only.
       - OPENCODE_HOSTNAME=0.0.0.0
       - OPENCODE_CONFIG=/config/opencode.json
+      # - OPENCODE_SERVER_PASSWORD=change-me
     volumes:
       - ./config:/config
       - ./data:/data
       - ./projects:/projects
     working_dir: /projects
+    restart: unless-stopped

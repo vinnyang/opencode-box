@@ -7,29 +7,29 @@
         "npx",
         "-y",
         "@modelcontextprotocol/server-filesystem",
-        "/projects",
+        "/projects"
       ],
-      "enabled": true,
+      "enabled": true
     },
     "memory": {
       "type": "local",
       "command": ["npx", "-y", "@modelcontextprotocol/server-memory"],
-      "enabled": true,
+      "enabled": true
     },
     "sqlite": {
       "type": "local",
       "command": ["uvx", "mcp-server-sqlite", "--db-path", "/data/test.db"],
-      "enabled": true,
+      "enabled": true
     },
     "context7": {
       "type": "remote",
       "url": "https://mcp.context7.com/mcp",
-      "enabled": true,
+      "enabled": true
     },
     "gh_grep": {
       "type": "remote",
       "url": "https://mcp.grep.app",
-      "enabled": true,
-    },
-  },
+      "enabled": true
+    }
+  }
 }
