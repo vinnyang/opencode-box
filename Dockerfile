@@ -1,22 +1,32 @@
 FROM node:alpine
 
+# Populated automatically by Docker Buildx per target platform (amd64 / arm64).
+ARG TARGETARCH
+
 LABEL org.opencontainers.image.title="opencode-box" \
       org.opencontainers.image.description="OpenCode AI coding agent in a container, with Node (npx) and Python (uvx) MCP support" \
       org.opencontainers.image.source="https://github.com/vinnyang/opencode-box" \
       org.opencontainers.image.licenses="MIT"
 
-# Pin opencode to the tracked version for reproducible builds (the installer reads $VERSION).
+# Pin opencode to the tracked version for reproducible builds.
 # Copied first so a version bump invalidates the install layer cache.
 COPY .opencode-version /tmp/oc-version
 
 RUN apk upgrade --no-cache && \
     apk add --no-cache git ripgrep jq python3 py3-pip curl bash tar && \
     pip3 install --break-system-packages uv && \
-    curl -fsSL https://opencode.ai/install | VERSION="$(cat /tmp/oc-version)" bash && \
-    rm /tmp/oc-version
+    OC_VER="$(cat /tmp/oc-version)" && \
+    case "$TARGETARCH" in \
+      amd64) OC_ARCH="x64" ;; \
+      arm64) OC_ARCH="arm64" ;; \
+      *) echo "unsupported TARGETARCH: '$TARGETARCH'" >&2; exit 1 ;; \
+    esac && \
+    curl -fsSL -o /tmp/oc.tar.gz \
+      "https://github.com/anomalyco/opencode/releases/download/v${OC_VER}/opencode-linux-${OC_ARCH}-musl.tar.gz" && \
+    tar -xzf /tmp/oc.tar.gz -C /usr/local/bin opencode && \
+    chmod 755 /usr/local/bin/opencode && \
+    rm /tmp/oc.tar.gz /tmp/oc-version
 # Need to compile native MCP deps (Python wheels / node-gyp)? add: build-base python3-dev
-
-ENV PATH="/root/.opencode/bin:$PATH"
 
 RUN mkdir -p /config /data/sessions /data/snapshots /data/log /projects
 
