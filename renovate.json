@@ -7,8 +7,6 @@
     "helpers:pinGitHubActionDigests"
   ],
   "labels": ["dependencies"],
-  "schedule": ["before 4am"],
-  "timezone": "America/New_York",
   "packageRules": [
     {
       "description": "Auto-merge Docker digest updates (very low risk)",
