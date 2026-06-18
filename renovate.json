@@ -9,6 +9,11 @@
   "labels": ["dependencies"],
   "packageRules": [
     {
+      "description": "Group image-affecting updates into one PR so each merge is a single Docker Hub build",
+      "matchFileNames": ["Dockerfile", ".opencode-version"],
+      "groupName": "container image"
+    },
+    {
       "description": "Auto-merge Docker digest updates (very low risk)",
       "matchDatasources": ["docker"],
       "matchUpdateTypes": ["digest"],
