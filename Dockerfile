@@ -1,4 +1,4 @@
-FROM node:alpine@sha256:233761595746769ebfdb6090f44fc7cdf818ae0ce62d2b37e0367723b9823e36
+FROM node:alpine@sha256:a4fb14143ee24c038c851864fe85fd90f9121abc8fdca3092798bcc02e06b1d8
 
 # Populated automatically by Docker Buildx per target platform (amd64 / arm64).
 ARG TARGETARCH
