@@ -41,8 +41,10 @@ COPY config/opencode.json /config/opencode.json
 EXPOSE 4096
 
 # Liveness probe (default unsecured server returns 200 at /; adjust if you require auth)
+# Use 127.0.0.1, not localhost: the v2 server binds IPv4-only and busybox wget
+# resolves localhost to ::1 first, then reports connection refused.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD wget -qO- "http://localhost:${OPENCODE_PORT:-4096}/" >/dev/null 2>&1 || exit 1
+  CMD wget -qO- "http://127.0.0.1:${OPENCODE_PORT:-4096}/" >/dev/null 2>&1 || exit 1
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["serve"]
