@@ -1,6 +1,6 @@
 # OpenCode Container w. Node & Python
 
-Docker container for [OpenCode](https://opencode.ai) - the open source AI coding agent.
+Docker container for [OpenCode](https://opencode.ai) **v2** - the open source AI coding agent.
 
 ## What's Included
 
@@ -24,7 +24,7 @@ Docker container for [OpenCode](https://opencode.ai) - the open source AI coding
 docker run -d -p 4096:4096 -e OPENCODE_HOSTNAME=0.0.0.0 vinnyahh/opencode-box:latest
 ```
 
-> ⚠️ **Security:** `OPENCODE_HOSTNAME=0.0.0.0` is required for the published port to be reachable, but it exposes an **unauthenticated** agent with full file & shell access. Run it only on a trusted local network, or set `OPENCODE_SERVER_PASSWORD`.
+> ⚠️ **Security:** `OPENCODE_HOSTNAME=0.0.0.0` is required for the published port to be reachable. In v2 the server is **always password-protected**: with `OPENCODE_SERVER_PASSWORD` set it uses your password; otherwise it generates one and prints it at startup. Connecting clients authenticate with the same value via `OPENCODE_PASSWORD`.
 
 **With persistence:**
 
