@@ -12,6 +12,7 @@ LABEL org.opencontainers.image.title="opencode-box" \
 # Copied first so a version bump invalidates the install layer cache.
 COPY .opencode-version /tmp/oc-version
 
+# v2 binaries are published as npm platform packages, not GitHub release assets.
 RUN apk upgrade --no-cache && \
     apk add --no-cache git ripgrep jq python3 py3-pip curl bash tar && \
     pip3 install --break-system-packages uv && \
@@ -22,10 +23,11 @@ RUN apk upgrade --no-cache && \
       *) echo "unsupported TARGETARCH: '$TARGETARCH'" >&2; exit 1 ;; \
     esac && \
     curl -fsSL -o /tmp/oc.tar.gz \
-      "https://github.com/anomalyco/opencode/releases/download/v${OC_VER}/opencode-linux-${OC_ARCH}-musl.tar.gz" && \
-    tar -xzf /tmp/oc.tar.gz -C /usr/local/bin opencode && \
+      "https://registry.npmjs.org/@opencode/cli-linux-${OC_ARCH}-musl/-/cli-linux-${OC_ARCH}-musl-${OC_VER}.tgz" && \
+    tar -xzf /tmp/oc.tar.gz -C /tmp package/bin/opencode && \
+    mv /tmp/package/bin/opencode /usr/local/bin/opencode && \
     chmod 755 /usr/local/bin/opencode && \
-    rm /tmp/oc.tar.gz /tmp/oc-version
+    rm -rf /tmp/oc.tar.gz /tmp/package /tmp/oc-version
 # Need to compile native MCP deps (Python wheels / node-gyp)? add: build-base python3-dev
 
 RUN mkdir -p /config /data/sessions /data/snapshots /data/log /projects
@@ -39,8 +41,10 @@ COPY config/opencode.json /config/opencode.json
 EXPOSE 4096
 
 # Liveness probe (default unsecured server returns 200 at /; adjust if you require auth)
+# Use 127.0.0.1, not localhost: the v2 server binds IPv4-only and busybox wget
+# resolves localhost to ::1 first, then reports connection refused.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD wget -qO- "http://localhost:${OPENCODE_PORT:-4096}/" >/dev/null 2>&1 || exit 1
+  CMD wget -qO- "http://127.0.0.1:${OPENCODE_PORT:-4096}/" >/dev/null 2>&1 || exit 1
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["serve"]

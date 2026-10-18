@@ -1,6 +1,6 @@
 # OpenCode Container w. Node & Python
 
-Docker container for [OpenCode](https://opencode.ai) - the open source AI coding agent.
+Docker container for [OpenCode](https://opencode.ai) **v2** - the open source AI coding agent.
 
 ## What's Included
 
@@ -22,9 +22,13 @@ Docker container for [OpenCode](https://opencode.ai) - the open source AI coding
 
 ```bash
 docker run -d -p 4096:4096 -e OPENCODE_HOSTNAME=0.0.0.0 vinnyahh/opencode-box:latest
+
+# v2 always password-protects the server; with no OPENCODE_SERVER_PASSWORD set
+# it generates one and prints it at startup. Fetch it with:
+docker logs <container> | grep 'server password'
 ```
 
-> ⚠️ **Security:** `OPENCODE_HOSTNAME=0.0.0.0` is required for the published port to be reachable, but it exposes an **unauthenticated** agent with full file & shell access. Run it only on a trusted local network, or set `OPENCODE_SERVER_PASSWORD`.
+> ⚠️ **Security:** `OPENCODE_HOSTNAME=0.0.0.0` is required for the published port to be reachable. In v2 the server is **always password-protected**: with `OPENCODE_SERVER_PASSWORD` set it uses your password; otherwise it generates one and prints it at startup. Connecting clients authenticate with the same value via `OPENCODE_PASSWORD`.
 
 **With persistence:**
 
@@ -33,6 +37,7 @@ docker run -d \
   -p 4096:4096 \
   -e OPENCODE_PORT=4096 \
   -e OPENCODE_HOSTNAME=0.0.0.0 \
+  -e OPENCODE_SERVER_PASSWORD=change-me \
   -e OPENCODE_CONFIG=/config/opencode.json \
   -v ./config:/config \
   -v ./data:/data \
@@ -40,16 +45,18 @@ docker run -d \
   vinnyahh/opencode-box:latest
 ```
 
-Access at http://localhost:4096
+Access at http://localhost:4096 and log in with the server password.
 
 ## Environment Variables
 
-| Variable                   | Description          | Default     |
-| -------------------------- | -------------------- | ----------- |
-| `OPENCODE_PORT`            | Server port          | `4096`      |
-| `OPENCODE_HOSTNAME`        | Server hostname      | `127.0.0.1` |
-| `OPENCODE_CONFIG`          | Path to config file | -           |
-| `OPENCODE_SERVER_PASSWORD` | Basic auth password | -           |
+| Variable                   | Description                                                                        | Default        |
+| -------------------------- | ---------------------------------------------------------------------------------- | -------------- |
+| `OPENCODE_PORT`            | Server port                                                                        | `4096`         |
+| `OPENCODE_HOSTNAME`        | Server hostname                                                                    | `127.0.0.1`    |
+| `OPENCODE_CONFIG`          | Path to config file                                                                | auto-detect    |
+| `OPENCODE_SERVER_PASSWORD` | Server password (web UI login, pairing, client auth)                               | auto-generated |
+| `OPENCODE_PASSWORD`        | Also read server-side as the password; how connecting **clients** pass the password | -              |
+| `DEBUG=true`               | Entrypoint debug output (versions, PATH, config and symlink status)                | -              |
 
 ## Volumes
 
@@ -64,24 +71,28 @@ Expected structure:
 ```
 config/
 ├── opencode.json      # Main config file
-├── agents/            # Custom agents
+├── agents/            # Custom agents (markdown) — preferred v2 location
 ├── commands/          # Custom commands
-├── plugins/           # Custom plugins
-├── themes/            # Custom themes
-├── tools/             # Custom tools
+├── plugins/           # Custom plugins (v2 plugins use the @opencode/plugin API)
 ├── skills/            # Custom skills
-└── modes/             # Custom modes
+├── themes/            # Custom themes
+└── tools/             # Custom tools
 
 data/
+├── opencode.db        # All sessions & messages (SQLite)
 ├── auth.json          # API credentials (auto-generated)
 ├── mcp-auth.json      # MCP OAuth tokens (auto-generated)
-├── sessions/          # Conversation history
-├── snapshots/         # Session checkpoints
+├── snapshot/          # Session checkpoints
 └── log/               # Log files
 
 projects/
 └── (your code)        # Your project files
 ```
+
+Legacy v1 directories are still discovered by v2: `mode/` and `modes/` (entries load as
+**primary** agents), `agent/` alongside `agents/`, `command/` alongside `commands/`,
+`plugin/` alongside `plugins/`, and `skill/` alongside `skills/`. Prefer the singular
+v2 locations above for anything new.
 
 ## MCP Server Support
 
@@ -93,7 +104,10 @@ This container supports running MCP (Model Context Protocol) servers:
 | Python packages  | `uvx`   | `uvx mcp-server-sqlite`                      |
 | Remote servers   | HTTP    | URL in config                                |
 
-See [opencode.json](https://github.com/vinnyahh/opencode-box/blob/master/config/opencode.json) for a full example.
+> v2 transparently normalizes legacy v1-style `mcp` blocks. The native v2 shape groups
+> servers under `mcp.servers` and uses `disabled` instead of `enabled`. Both load fine —
+> the [example config](https://github.com/vinnyahh/opencode-box/blob/master/config/opencode.json)
+> intentionally keeps the v1 shape.
 
 ## Browser Access
 
@@ -124,6 +138,11 @@ npx playwright install chromium
 
 This approach works out-of-the-box in the container but uses Playwright/Puppeteer APIs directly rather than the Chrome DevTools MCP protocol.
 
+> **Alpine/musl caveat:** Playwright/Puppeteer's downloaded browsers are glibc (Ubuntu)
+> builds and fail on this musl image with `spawn ENOENT` / "required file not found".
+> Use Alpine's musl-native Chromium instead: `apk add chromium` and point Playwright
+> (or the browser MCP) at `--executable-path /usr/bin/chromium`.
+
 ## Operation
 
 ### Entrypoint
@@ -131,12 +150,12 @@ This approach works out-of-the-box in the container but uses Playwright/Puppetee
 The [`docker-entrypoint.sh`](docker-entrypoint.sh) handles startup automatically:
 
 - **Config auto-detection** — Looks for `/config/opencode.jsonc` first, then `/config/opencode.json`. Override with the `OPENCODE_CONFIG` environment variable.
-- **Directory linking** — Symlinks `/config` → `~/.config/opencode` and `/data` → `~/.local/share/opencode` so OpenCode finds them in their default locations.
+- **Directory linking** — Symlinks `/config` → `~/.config/opencode` and `/data` → `~/.local/share/opencode`, but **only when the default paths are free**. Mounting state directly at the defaults (e.g. `-v ~/.config/opencode:/root/.config/opencode`) works equally well and skips the symlinks entirely.
 - **Debug mode** — Set `DEBUG=true` to print version info, PATH, config and symlink status on startup.
 
 ### Healthcheck
 
-The container has a built-in [`HEALTHCHECK`](Dockerfile#L42-L43) that pings the OpenCode server every 30s. Works with Docker's health status and orchestration tools.
+The container has a built-in [`HEALTHCHECK`](Dockerfile) that requests `/` every 30s via `127.0.0.1` — v2 binds IPv4 only, so `localhost` would first resolve to `::1` and report connection refused. Works with Docker's health status and orchestration tools.
 
 ## License
 

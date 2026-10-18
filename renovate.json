@@ -40,8 +40,8 @@
     },
     {
       "description": "Auto-merge opencode patch releases",
-      "matchDatasources": ["github-releases"],
-      "matchPackageNames": ["anomalyco/opencode"],
+      "matchDatasources": ["npm"],
+      "matchPackageNames": ["@opencode/cli-linux-x64-musl"],
       "matchUpdateTypes": ["patch"],
       "automerge": true
     }
@@ -49,12 +49,11 @@
   "customManagers": [
     {
       "customType": "regex",
-      "description": "Track opencode from GitHub releases (same source as the installed binary)",
+      "description": "Track opencode v2 from npm platform packages (same source as the installed binary)",
       "managerFilePatterns": ["/(^|/)\\.opencode-version$/"],
       "matchStrings": ["(?<currentValue>\\S+)"],
-      "depNameTemplate": "anomalyco/opencode",
-      "datasourceTemplate": "github-releases",
-      "extractVersionTemplate": "^v(?<version>.+)$"
+      "depNameTemplate": "@opencode/cli-linux-x64-musl",
+      "datasourceTemplate": "npm"
     }
   ]
 }
