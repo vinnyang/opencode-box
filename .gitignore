@@ -2,3 +2,4 @@ data/
 projects/
 .env
 .env.*
+docker-compose.yml
